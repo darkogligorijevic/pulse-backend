@@ -3,6 +3,7 @@ import { User } from 'src/users/entities/user.entity';
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { PostComment } from './post-comment.entity';
 import { PostLike } from './post-like.entity';
+import { PostMedia } from './post-media.entity';
 
 @Entity('posts')
 export class Post {
@@ -14,6 +15,9 @@ export class Post {
   user: User;
   @Column()
   userId: number;
+
+  @OneToMany(() => PostMedia, postMedia => postMedia.post, { onDelete: 'CASCADE' })
+  media: PostMedia[];
 
   @Column({ nullable: true })
   description: string;
