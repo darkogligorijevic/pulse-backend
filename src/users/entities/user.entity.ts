@@ -8,12 +8,6 @@ export enum UserRole {
     USER = 'user'
 }
 
-export enum Gender {
-    MALE = 'male',
-    FEMALE = 'female',
-    OTHER = 'other'
-}
-
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -28,6 +22,9 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Column({ unique: true })
+  username: string;
+
   @Column()
   password: string;
 
@@ -36,9 +33,6 @@ export class User {
 
   @Column({ nullable: true })
   avatarUrl: string;
-
-  @Column({ type: 'enum', enum: Gender })
-  gender: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: UserRole;
