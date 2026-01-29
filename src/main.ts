@@ -9,10 +9,20 @@ async function bootstrap() {
     .setTitle("Social Media App")
     .setDescription("Something like Instagram")
     .setVersion("0.1.0")
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        in: 'header',
+      },
+      'jwt',
+    )
     .build()
 
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api", app, documentFactory); 
+  const document = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup("api", app, document); 
 
   await app.listen(process.env.PORT || 3000);
 }
