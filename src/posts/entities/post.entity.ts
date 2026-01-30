@@ -16,16 +16,16 @@ export class Post {
   @Column()
   userId: number;
 
-  @OneToMany(() => PostMedia, postMedia => postMedia.post, { onDelete: 'CASCADE' })
+  @OneToMany(() => PostMedia, postMedia => postMedia.post, { cascade: true })
   media: PostMedia[];
 
   @Column({ nullable: true })
   description: string;
 
-  @OneToMany(() => PostLike, like => like.post, { onDelete: 'CASCADE' })
+  @OneToMany(() => PostLike, like => like.post, { cascade: true })
   likes: PostLike[]
 
-  @OneToMany(() => PostComment, comment => comment.post, { onDelete: 'CASCADE' })
+  @OneToMany(() => PostComment, comment => comment.post, { cascade: true })
   comments: PostComment[];
 
   @CreateDateColumn()
