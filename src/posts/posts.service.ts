@@ -151,4 +151,29 @@ export class PostsService {
         return {message: 'Comment is deleted!'}
     }
 
+    // get number of likes
+    async getNumberOfLikes(postId: number) : Promise<number> {
+        return await this.postLikesRepository.count({ where: {postId} });
+    }
+
+    // get number or comments
+    async getNumberOfComments(postId: number) : Promise<number> {
+        return await this.postCommentsRepository.count({ where: { postId } });
+    }
+
+    // get all posts
+    async getAllPostsByUserId(userId: number) {
+        // later check if the profile is private and current user is not following -> don't show posts
+        return await this.postsRepository.find({ where: { userId } });
+    }
+
+    // get post
+    async getPostByUserId(postId: number, userId: number) {
+        return this.postsRepository.findOne({ where: { id: postId, userId } });
+    }
+
+    // get all users that liked post
+
+    // get all users that comment on the post
+
 }

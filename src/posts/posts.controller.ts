@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Param, Post, Req, Request, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req, Request, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -89,5 +89,25 @@ export class PostsController {
     @UseGuards(JwtAuthGuard)
     removeComment(@Param('commentId') commentId: number, @Request() req) {
         return this.postsService.removeComment(commentId, req.user.userId);
+    }
+
+    @Get(':id/likes')
+    getNumberOfLikes(@Param('id') postId: number) {
+        return this.postsService.getNumberOfLikes(postId);
+    }
+
+    @Get(':id/comments')
+    getNumberOfComments(@Param('id') postId: number) {
+        return this.postsService.getNumberOfComments(postId);
+    }
+
+    @Get('user/:userId')
+    getAllPostsByUserId(@Param('userId') userId: number) {
+        return this.postsService.getAllPostsByUserId(userId);
+    }
+
+    @Get(':id/user/:userId')
+    getPostByUserId(@Param('id') postId: number, @Param('userId') userId: number) {
+        return this.postsService.getPostByUserId(postId, userId);
     }
 }
