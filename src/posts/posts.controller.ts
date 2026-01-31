@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, Request, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Request, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -7,6 +7,8 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagg
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { EditPostDto } from './dto/edit-post.dto';
+import { EditCommentDto } from './dto/edit-comment.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -51,6 +53,14 @@ export class PostsController {
         return this.postsService.create(req.user.userId, files, dto);
     }
 
+    @Patch(':id')
+    @ApiOperation({ summary: 'Edit post' })
+    @ApiBearerAuth('jwt')
+    @UseGuards(JwtAuthGuard)
+    editPost(@Param('id') postId: number, @Request() req, @Body() dto: EditPostDto) {
+        return this.postsService.edit(postId, req.user.userId, dto);
+    }
+
     @Delete(':id')
     @ApiOperation({ summary: 'Delete post' })
     @ApiBearerAuth('jwt')
@@ -91,23 +101,48 @@ export class PostsController {
         return this.postsService.removeComment(commentId, req.user.userId);
     }
 
-    @Get(':id/likes')
+    
+    @Patch('comments/:commentId')
+    @ApiOperation({ summary: 'Edit comment' })
+    @ApiBearerAuth('jwt')
+    @UseGuards(JwtAuthGuard)
+    editComment(@Param('commentId') commentId: number, @Request() req, @Body() dto: EditCommentDto) {
+        return this.postsService.editComment(commentId, req.user.userId, dto);
+    }
+
+    @Get(':id/likes-number')
+    @ApiOperation({ summary: 'Total number of likes on one post' })
     getNumberOfLikes(@Param('id') postId: number) {
         return this.postsService.getNumberOfLikes(postId);
     }
 
-    @Get(':id/comments')
+    @Get(':id/comments-number')
+    @ApiOperation({ summary: 'Total number of comments on one post' })
     getNumberOfComments(@Param('id') postId: number) {
         return this.postsService.getNumberOfComments(postId);
     }
 
     @Get('user/:userId')
+    @ApiOperation({ summary: 'Get all posts by one user' })
     getAllPostsByUserId(@Param('userId') userId: number) {
         return this.postsService.getAllPostsByUserId(userId);
     }
 
     @Get(':id/user/:userId')
+    @ApiOperation({ summary: 'Get one post by one user' })
     getPostByUserId(@Param('id') postId: number, @Param('userId') userId: number) {
         return this.postsService.getPostByUserId(postId, userId);
+    }
+
+    @Get(':id/likes')
+    @ApiOperation({ summary: 'Get all like for one post' })
+    getAllPostLikes(@Param('id') postId: number) {
+        return this.postsService.getAllPostLikes(postId);
+    }
+
+    @Get(':id/comments')
+    @ApiOperation({ summary: 'Get all comments for one post' })
+    getAllPostComments(@Param('id') postId: number) {
+        return this.postsService.getAllPostComments(postId);
     }
 }

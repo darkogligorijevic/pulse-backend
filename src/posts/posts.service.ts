@@ -10,6 +10,8 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import * as fs from "fs";
 import * as path from "path";
+import { EditPostDto } from './dto/edit-post.dto';
+import { EditCommentDto } from './dto/edit-comment.dto';
 
 @Injectable()
 export class PostsService {
@@ -52,6 +54,18 @@ export class PostsService {
         return post;
     }
 
+    // edit post
+    async edit(postId: number, userId: number, dto: EditPostDto) {
+        const post = await this.findById(postId);
+        if (!post) throw new NotFoundException("This post is not found!");
+
+        if (post.userId !== userId) throw new UnauthorizedException("You can only edit your posts!");
+
+        post.description = dto.description;
+
+        return await this.postsRepository.save(post);
+    }
+
     // delete post 
     async remove(postId: number, userId: number) {
         const post = await this.findById(postId);
@@ -59,7 +73,7 @@ export class PostsService {
         
         if (!post || !user) throw new NotFoundException("Post or User don't exist!");
 
-        if (post.userId !== user?.id) throw new UnauthorizedException("You can only delete your own posts!");
+        if (post.userId !== user.id) throw new UnauthorizedException("You can only delete your own posts!");
 
         // delete media from /uploads folder
         const medias = await this.postMediasRepository.find({ where: { postId } });
@@ -139,6 +153,18 @@ export class PostsService {
         return comment;
     }
 
+    // edit comment
+    async editComment(commentId: number, userId: number, dto: EditCommentDto) {
+        const comment = await this.postCommentsRepository.findOne({ where: { id: commentId } });
+        if (!comment) throw new NotFoundException("This comment doesn't exist!");
+
+        if (comment.userId !== userId) throw new UnauthorizedException("You can only edit your comments!");
+
+        comment.comment = dto.comment;
+
+        return await this.postCommentsRepository.save(comment);
+    }
+
     // delete comment
     async removeComment(commentId: number, userId: number) {
         const comment = await this.postCommentsRepository.findOne({ where: { id: commentId } });
@@ -172,8 +198,13 @@ export class PostsService {
         return this.postsRepository.findOne({ where: { id: postId, userId } });
     }
 
-    // get all users that liked post
+    // get all likes under one post
+    async getAllPostLikes(postId: number) {
+        return await this.postLikesRepository.find({ where: { postId } });
+    }
 
-    // get all users that comment on the post
-
+    // get all comments under one post
+    async getAllPostComments(postId: number) {
+        return await this.postCommentsRepository.find({ where: { postId } });
+    }
 }
