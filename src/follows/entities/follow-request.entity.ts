@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity('follow_requests')
-@Unique(['followerId', 'followingId'])
+@Unique(['fromUserId', 'toUserId'])
 @Index(['fromUserId'])
 @Index(['toUserId'])
 export class FollowRequest {

@@ -108,18 +108,26 @@ export class FollowsService {
     }
 
     // unfollow logic
-    async unfollow(userId: number, targetUserId: number) {
-        const follow = await this.followsRepository.findOne({
-            where: { followerId: userId, followingId: targetUserId }
+    async unfollowOrCancel(userId: number, targetUserId: number) {
+        const unfollow = await this.followsRepository.delete({
+            followerId: userId,
+            followingId: targetUserId
         });
 
-        if (!follow) throw new NotFoundException();
+        if (unfollow.affected && unfollow.affected > 0) {
+            return { message: 'Unfollowed!' };
+        }
 
-        await this.followsRepository.delete({ 
-            followerId: userId, followingId: targetUserId 
+        const cancel = await this.followRequestsRepository.delete({
+            fromUserId: userId,
+            toUserId: targetUserId
         });
 
-        return { message: 'You just unfollowed!' };
+        if (cancel.affected && cancel.affected > 0) {
+            return { message: 'Request canceled!' };
+        }
+
+        throw new NotFoundException('Nothing to unfollow/cancel!');
     }
 
     // following status

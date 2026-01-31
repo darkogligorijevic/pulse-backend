@@ -23,8 +23,8 @@ export class FollowsController {
     @ApiOperation({ summary: 'Unfollow user!' })
     @ApiBearerAuth('jwt')
     @UseGuards(JwtAuthGuard)
-    unfollow(@Request() req, @Param('targetUserId') targetUserId: number) {
-        return this.followsService.unfollow(req.user.userId, targetUserId);
+    unfollowOrCancel(@Request() req, @Param('targetUserId') targetUserId: number) {
+        return this.followsService.unfollowOrCancel(req.user.userId, targetUserId);
     }
 
     // accept follow req
