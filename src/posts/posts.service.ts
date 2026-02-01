@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { PostLike } from './entities/post-like.entity';
@@ -12,6 +12,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { EditPostDto } from './dto/edit-post.dto';
 import { EditCommentDto } from './dto/edit-comment.dto';
+import { FollowsService } from 'src/follows/follows.service';
 
 @Injectable()
 export class PostsService {
@@ -29,6 +30,8 @@ export class PostsService {
         private postCommentsRepository: Repository<PostComment>,
 
         private usersService: UsersService,
+
+        private followsService: FollowsService
     ) {}
 
     async findById(id: number) {
@@ -102,10 +105,13 @@ export class PostsService {
         const post = await this.findById(postId);
         const user = await this.usersService.findById(userId);
 
+        
         if (!post || !user) throw new NotFoundException("Post or User don't exist!");
+        
+        await this.followsService.assertCanViewUser(userId, post.userId);
 
         const existing = await this.postLikesRepository.findOne({ 
-            where: { postId, userId }
+            where: { postId, userId}
          });
 
         if (existing) throw new BadRequestException('Already liked!');
@@ -143,6 +149,8 @@ export class PostsService {
 
         if (!post || !user) throw new NotFoundException("Post or User don't exist!");
 
+        await this.followsService.assertCanViewUser(userId, post.userId);
+
         const comment = await this.postCommentsRepository.create({
             postId,
             userId,
@@ -178,33 +186,54 @@ export class PostsService {
     }
 
     // get number of likes
-    async getNumberOfLikes(postId: number) : Promise<number> {
+    async getNumberOfLikes(postId: number, viewerId: number) {
+        const post = await this.findById(postId);
+
+        if (!post) throw new NotFoundException("Post doesn't exist!");
+        
+        await this.followsService.assertCanViewUser(viewerId, post.userId);
         return await this.postLikesRepository.count({ where: {postId} });
     }
 
     // get number or comments
-    async getNumberOfComments(postId: number) : Promise<number> {
+    async getNumberOfComments(postId: number, viewerId: number) {
+        const post = await this.findById(postId);
+
+        if (!post) throw new NotFoundException("Post doesn't exist!");
+        
+        await this.followsService.assertCanViewUser(viewerId, post.userId);
         return await this.postCommentsRepository.count({ where: { postId } });
     }
 
     // get all posts
-    async getAllPostsByUserId(userId: number) {
+    async getAllPostsByUserId(viewerId: number, targetId: number) {
         // later check if the profile is private and current user is not following -> don't show posts
-        return await this.postsRepository.find({ where: { userId } });
+        await this.followsService.assertCanViewUser(viewerId, targetId);
+        return await this.postsRepository.find({ where: { userId: targetId } });
     }
 
     // get post
-    async getPostByUserId(postId: number, userId: number) {
-        return this.postsRepository.findOne({ where: { id: postId, userId } });
+    async getPostByUserId(postId: number, viewerId: number,targetId: number) {
+        await this.followsService.assertCanViewUser(viewerId, targetId);
+        return this.postsRepository.findOne({ where: { id: postId, userId: targetId } });
     }
 
     // get all likes under one post
-    async getAllPostLikes(postId: number) {
+    async getAllPostLikes(postId: number, viewerId: number) {
+        const post = await this.findById(postId);
+        if (!post) throw new NotFoundException("Post doesn't exist!");
+
+        await this.followsService.assertCanViewUser(viewerId, post.userId);
         return await this.postLikesRepository.find({ where: { postId } });
     }
 
     // get all comments under one post
-    async getAllPostComments(postId: number) {
+    async getAllPostComments(postId: number, viewerId: number) {
+        const post = await this.findById(postId);
+        if (!post) throw new NotFoundException("Post doesn't exist!");
+
+        await this.followsService.assertCanViewUser(viewerId, postId);
+        
         return await this.postCommentsRepository.find({ where: { postId } });
     }
 }

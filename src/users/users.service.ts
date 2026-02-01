@@ -4,12 +4,15 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FollowsService } from 'src/follows/follows.service';
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectRepository(User)
-        private userRepository: Repository<User>
+        private userRepository: Repository<User>,
+
+        private followsService: FollowsService
     ) {}
 
     
@@ -68,5 +71,10 @@ export class UsersService {
 
         return {message: 'Account is removed!'}
     
+    }
+
+    async getProfile(viewerId: number, targetId: number) {
+        await this.followsService.assertCanViewUser(viewerId, targetId);
+        return this.findById(targetId);
     }
 }

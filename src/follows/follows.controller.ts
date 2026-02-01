@@ -63,4 +63,24 @@ export class FollowsController {
     getFollowStatus(@Request() req, @Param('targetUserId') targetUserId: number) {
         return this.followsService.getFollowStatus(req.user.userId, targetUserId);
     }
+
+    @Get('user/:targetUserId/followers')
+    getFollowers(@Request() req, @Param('targetUserId') targetUserId: number) {
+        return this.followsService.getFollowers(req.user.userId, targetUserId);
+    }
+
+    @Get('user/:targetUserId/following')
+    getFollowing(@Request() req, @Param('targetUserId') targetUserId: number) {
+        return this.followsService.getFollowing(req.user.userId, targetUserId);
+    }
+
+    @Get('user/:targetUserId/followers/count')
+    getFollowerCount(@Param('targetUserId') targetUserId: number) {
+        return this.followsService.getFollowerCount(targetUserId);
+    }
+
+    @Get('user/:targetUserId/following/count')
+    getFollowingCount(@Param('targetUserId') targetUserId: number) {
+        return this.followsService.getFollowingCount(targetUserId);
+    }
 }

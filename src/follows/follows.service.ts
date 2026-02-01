@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { Follow } from './entities/follow.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { FollowRequest } from './entities/follow-request.entity';
 
@@ -146,5 +146,49 @@ export class FollowsService {
 
         return { status: 'none' };
 
+    }
+
+    // can view user
+    async assertCanViewUser(viewerId: number, targetUserId: number) {
+        const target = await this.usersService.findById(targetUserId);
+        if (!target) throw new NotFoundException();
+
+        if (viewerId === targetUserId) return;
+
+        if (!target.isPrivate) return;
+
+        const follows = await this.followsRepository.exists({
+            where: { followerId: viewerId, followingId: targetUserId }
+        });
+
+        if (!follows) throw new ForbiddenException('This profile is private!');
+    }
+
+    async getFollowers(viewerId: number, targetUserId: number) {
+        await this.assertCanViewUser(viewerId, targetUserId)
+        return await this.followsRepository.find({ 
+            where: { followingId: targetUserId },
+            relations: { follower: true } 
+        });
+    }
+
+    async getFollowing(viewerId: number, targetUserId: number) {
+        await this.assertCanViewUser(viewerId, targetUserId)
+        return await this.followsRepository.find({ 
+            where: { followerId: targetUserId },
+            relations: { following: true } 
+        });
+    } 
+
+    async getFollowerCount(targetUserId: number) {
+        return await this.followsRepository.count({ 
+            where: { followingId: targetUserId }  
+        });
+    }
+
+    async getFollowingCount(targetUserId: number) {
+        return await this.followsRepository.count({
+            where: { followerId: targetUserId }
+        });
     }
 }

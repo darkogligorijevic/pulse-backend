@@ -112,37 +112,37 @@ export class PostsController {
 
     @Get(':id/likes-number')
     @ApiOperation({ summary: 'Total number of likes on one post' })
-    getNumberOfLikes(@Param('id') postId: number) {
-        return this.postsService.getNumberOfLikes(postId);
+    getNumberOfLikes(@Param('id') postId: number, @Request() req) {
+        return this.postsService.getNumberOfLikes(postId, req.user.userId);
     }
 
     @Get(':id/comments-number')
     @ApiOperation({ summary: 'Total number of comments on one post' })
-    getNumberOfComments(@Param('id') postId: number) {
-        return this.postsService.getNumberOfComments(postId);
+    getNumberOfComments(@Param('id') postId: number, @Request() req) {
+        return this.postsService.getNumberOfComments(postId, req.user.userId);
     }
 
-    @Get('user/:userId')
+    @Get('user/:targetId')
     @ApiOperation({ summary: 'Get all posts by one user' })
-    getAllPostsByUserId(@Param('userId') userId: number) {
-        return this.postsService.getAllPostsByUserId(userId);
+    getAllPostsByUserId(@Request() req, @Param('targetId') targetId: number) {
+        return this.postsService.getAllPostsByUserId(req.user.userId, targetId);
     }
 
-    @Get(':id/user/:userId')
+    @Get(':id/user/:targetId')
     @ApiOperation({ summary: 'Get one post by one user' })
-    getPostByUserId(@Param('id') postId: number, @Param('userId') userId: number) {
-        return this.postsService.getPostByUserId(postId, userId);
+    getPostByUserId(@Param('id') postId: number, @Request() req, @Param('targetId') targetId: number) {
+        return this.postsService.getPostByUserId(postId, req.user.userId, targetId);
     }
 
     @Get(':id/likes')
     @ApiOperation({ summary: 'Get all like for one post' })
-    getAllPostLikes(@Param('id') postId: number) {
-        return this.postsService.getAllPostLikes(postId);
+    getAllPostLikes(@Param('id') postId: number, @Request() req) {
+        return this.postsService.getAllPostLikes(postId, req.user.userId);
     }
 
     @Get(':id/comments')
     @ApiOperation({ summary: 'Get all comments for one post' })
-    getAllPostComments(@Param('id') postId: number) {
-        return this.postsService.getAllPostComments(postId);
+    getAllPostComments(@Param('id') postId: number, @Request() req) {
+        return this.postsService.getAllPostComments(postId, req.user.userId);
     }
 }
