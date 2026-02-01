@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, forwardRef, HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -12,6 +12,7 @@ export class UsersService {
         @InjectRepository(User)
         private userRepository: Repository<User>,
 
+        @Inject(forwardRef(() => FollowsService))
         private followsService: FollowsService
     ) {}
 

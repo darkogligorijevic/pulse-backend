@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { Follow } from './entities/follow.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { FollowRequest } from './entities/follow-request.entity';
 
@@ -14,9 +14,16 @@ export class FollowsService {
         @InjectRepository(FollowRequest)
         private followRequestsRepository: Repository<FollowRequest>,
 
+        @Inject(forwardRef(() => UsersService))
         private usersService: UsersService
     ) {}
 
+        // check if Me is following specific user
+    async isFollowing(userId: number, targetUserId: number) {
+        return this.followsRepository.exists({
+            where: {followerId: userId, followingId: targetUserId}
+        });
+    }
 
     // follow logic
     async followRequest(userId: number, targetUserId: number) {
@@ -26,6 +33,10 @@ export class FollowsService {
         const target = await this.usersService.findById(targetUserId);
         if (!me || !target) throw new NotFoundException();
 
+        const isFollowing = await this.isFollowing(userId, targetUserId);
+
+        if (isFollowing) throw new BadRequestException("You are already following this user!");
+ 
         if (target.isPrivate) {
             try {
                 await this.followRequestsRepository.save({
@@ -98,13 +109,6 @@ export class FollowsService {
         });
 
         return { message: 'Request was rejected!' };
-    }
-
-    // check if Me is following specific user
-    async isFollowing(userId: number, targetUserId: number) {
-        return this.followsRepository.exists({
-            where: {followerId: userId, followingId: targetUserId}
-        });
     }
 
     // unfollow logic

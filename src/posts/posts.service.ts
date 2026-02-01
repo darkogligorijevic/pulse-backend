@@ -213,9 +213,11 @@ export class PostsService {
     }
 
     // get post
-    async getPostByUserId(postId: number, viewerId: number,targetId: number) {
-        await this.followsService.assertCanViewUser(viewerId, targetId);
-        return this.postsRepository.findOne({ where: { id: postId, userId: targetId } });
+    async getPostById(postId: number, viewerId: number) {
+        const post = await this.findById(postId);
+        if (!post) throw new NotFoundException();
+        await this.followsService.assertCanViewUser(viewerId, post.userId);
+        return this.postsRepository.findOne({ where: { id: postId, userId: post.userId } });
     }
 
     // get all likes under one post

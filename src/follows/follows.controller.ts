@@ -65,21 +65,33 @@ export class FollowsController {
     }
 
     @Get('user/:targetUserId/followers')
+    @ApiOperation({ summary: 'Get all followers!' })
+    @ApiBearerAuth('jwt')
+    @UseGuards(JwtAuthGuard)
     getFollowers(@Request() req, @Param('targetUserId') targetUserId: number) {
         return this.followsService.getFollowers(req.user.userId, targetUserId);
     }
 
     @Get('user/:targetUserId/following')
+    @ApiOperation({ summary: 'Get all followings!' })
+    @ApiBearerAuth('jwt')
+    @UseGuards(JwtAuthGuard)
     getFollowing(@Request() req, @Param('targetUserId') targetUserId: number) {
         return this.followsService.getFollowing(req.user.userId, targetUserId);
     }
 
     @Get('user/:targetUserId/followers/count')
+    @ApiOperation({ summary: 'Get follower count!' })
+    @ApiBearerAuth('jwt')
+    @UseGuards(JwtAuthGuard)
     getFollowerCount(@Param('targetUserId') targetUserId: number) {
         return this.followsService.getFollowerCount(targetUserId);
     }
 
     @Get('user/:targetUserId/following/count')
+    @ApiOperation({ summary: 'Get following count!' })
+    @ApiBearerAuth('jwt')
+    @UseGuards(JwtAuthGuard)
     getFollowingCount(@Param('targetUserId') targetUserId: number) {
         return this.followsService.getFollowingCount(targetUserId);
     }
