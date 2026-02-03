@@ -195,4 +195,15 @@ export class FollowsService {
             where: { followerId: targetUserId }
         });
     }
+
+    // for feed
+    async getFollowingIds(userId: number): Promise<number[]> {
+        const follows = await this.followsRepository.find({
+            where: { followerId: userId },
+            select: ['followingId'],
+        });
+
+        return follows.map(f => f.followingId);
+    }
+
 }

@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PostsModule } from './posts/posts.module';
 import { FollowsModule } from './follows/follows.module';
+import { FeedsModule } from './feeds/feeds.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { FollowsModule } from './follows/follows.module';
       })
     }),
     PostsModule,
-    FollowsModule
+    FollowsModule,
+    FeedsModule
   ],
   controllers: [AppController],
   providers: [AppService],

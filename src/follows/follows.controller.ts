@@ -95,4 +95,5 @@ export class FollowsController {
     getFollowingCount(@Param('targetUserId') targetUserId: number) {
         return this.followsService.getFollowingCount(targetUserId);
     }
+
 }
