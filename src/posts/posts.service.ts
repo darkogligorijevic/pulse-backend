@@ -13,6 +13,7 @@ import * as path from "path";
 import { EditPostDto } from './dto/edit-post.dto';
 import { EditCommentDto } from './dto/edit-comment.dto';
 import { FollowsService } from 'src/follows/follows.service';
+import { NotificationsGateway } from 'src/notifications/notifications.gateway';
 
 @Injectable()
 export class PostsService {
@@ -31,7 +32,9 @@ export class PostsService {
 
         private usersService: UsersService,
 
-        private followsService: FollowsService
+        private followsService: FollowsService,
+
+        private notificationsGateway: NotificationsGateway
     ) {}
 
     async findById(id: number) {
@@ -123,6 +126,12 @@ export class PostsService {
         
         await this.postLikesRepository.save(like);
 
+        this.safeNotify(post.userId, {
+            type: 'LIKE',
+            postId,
+            fromUserId: userId,
+            message: `${user.username} liked your post`
+        });
 
         return {message: `${user.username} liked ${post.user.username}'s post!`}
     }
@@ -158,6 +167,15 @@ export class PostsService {
         });
 
         await this.postCommentsRepository.save(comment);
+
+        this.safeNotify(post.userId, {
+            type: 'COMMENT',
+            postId,
+            commentId: comment.id,
+            fromUserId: userId,
+            message: `${user.username} left a comment on your post`
+        });
+
         return comment;
     }
 
@@ -217,7 +235,7 @@ export class PostsService {
         const post = await this.findById(postId);
         if (!post) throw new NotFoundException();
         await this.followsService.assertCanViewUser(viewerId, post.userId);
-        return this.postsRepository.findOne({ where: { id: postId, userId: post.userId } });
+        return post;
     }
 
     // get all likes under one post
@@ -234,8 +252,26 @@ export class PostsService {
         const post = await this.findById(postId);
         if (!post) throw new NotFoundException("Post doesn't exist!");
 
-        await this.followsService.assertCanViewUser(viewerId, postId);
+        await this.followsService.assertCanViewUser(viewerId, post.userId);
         
         return await this.postCommentsRepository.find({ where: { postId } });
+    }
+
+    // helper for notifications
+    private async safeNotify(
+        toUserId: number, 
+        payload: {
+            type: string;
+            postId: number;
+            commentId?: number;
+            fromUserId: number;
+            message: string;
+        }
+    ) {
+        try {
+            await this.notificationsGateway.sendNotification(toUserId, payload);
+        } catch (error) {
+            console.warn('Notification failed', error);
+        }
     }
 }

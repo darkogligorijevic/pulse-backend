@@ -8,12 +8,14 @@ import { PostLike } from './entities/post-like.entity';
 import { UsersModule } from 'src/users/users.module';
 import { PostMedia } from './entities/post-media.entity';
 import { FollowsModule } from 'src/follows/follows.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Post, PostComment, PostLike, PostMedia]),
     UsersModule,
-    FollowsModule
+    FollowsModule,
+    NotificationsModule,
   ],
   controllers: [PostsController],
   providers: [PostsService]

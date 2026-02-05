@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { FollowRequest } from './entities/follow-request.entity';
+import { NotificationsGateway } from 'src/notifications/notifications.gateway';
 
 @Injectable()
 export class FollowsService {
@@ -15,7 +16,9 @@ export class FollowsService {
         private followRequestsRepository: Repository<FollowRequest>,
 
         @Inject(forwardRef(() => UsersService))
-        private usersService: UsersService
+        private usersService: UsersService,
+
+        private notificationsGateway: NotificationsGateway
     ) {}
 
         // check if Me is following specific user
@@ -48,6 +51,13 @@ export class FollowsService {
                 throw new BadRequestException('Request already sent!');
             }
 
+            // send notification
+            await this.safeNotify(targetUserId, {
+                type: 'FOLLOW_REQUEST',
+                fromUserId: userId,
+                message: `${me.username} sent you a follow request`
+            });
+
             return { message: "Follow request sent" };
         } 
 
@@ -63,6 +73,12 @@ export class FollowsService {
             throw new BadRequestException("Already following!");
         }
 
+        await this.safeNotify(targetUserId, {
+            type: 'FOLLOW',
+            fromUserId: userId,
+            message: `${me.username} started following you`
+        });
+
         return { message: `${me.username} started following ${target.username}` };
     }
 
@@ -71,10 +87,13 @@ export class FollowsService {
         const request = await this.followRequestsRepository.findOne({ 
             where: { id: requestId } 
         });
+        const user = await this.usersService.findById(userId);
 
         if (!request) throw new NotFoundException();
+        if (!user) throw new NotFoundException();
 
         if (request.toUserId !== userId) throw new UnauthorizedException("You can't accept someone else's requests!");
+
 
         try {
             await this.followsRepository.save({
@@ -88,6 +107,13 @@ export class FollowsService {
 
         await this.followRequestsRepository.delete({ 
             id: requestId
+        });
+
+        // send notification
+        await this.safeNotify(request.fromUserId, {
+            type: 'FOLLOW_ACCEPTED',
+            fromUserId: userId,
+            message: `${user.username} accepted your follow request`
         });
 
         return { message: 'Request accepted!' };
@@ -204,6 +230,22 @@ export class FollowsService {
         });
 
         return follows.map(f => f.followingId);
+    }
+
+    // helper for notifications
+    private async safeNotify(
+        toUserId: number, 
+        payload: {
+            type: string;
+            fromUserId: number;
+            message: string;
+        }
+    ) {
+        try {
+            await this.notificationsGateway.sendNotification(toUserId, payload);
+        } catch (error) {
+            console.warn('Notification failed', error);
+        }
     }
 
 }

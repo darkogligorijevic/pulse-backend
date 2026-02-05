@@ -8,6 +8,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PostsModule } from './posts/posts.module';
 import { FollowsModule } from './follows/follows.module';
 import { FeedsModule } from './feeds/feeds.module';
+import { NotificationsGateway } from './notifications/notifications.gateway';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -32,9 +34,10 @@ import { FeedsModule } from './feeds/feeds.module';
     }),
     PostsModule,
     FollowsModule,
-    FeedsModule
+    FeedsModule,
+    NotificationsModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, NotificationsGateway],
 })
 export class AppModule {}
