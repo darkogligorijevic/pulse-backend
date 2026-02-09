@@ -13,40 +13,37 @@ import * as jwt from 'jsonwebtoken';
   },
 })
 export class NotificationsGateway
-  implements OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayConnection {
 
   @WebSocketServer()
   server: Server;
-
-  private onlineUsers = new Map<number, string>();
 
   handleConnection(client: Socket) {
     try {
       const token = client.handshake.auth.token;
       const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
 
-      this.onlineUsers.set(payload.sub, client.id);
+      if (!payload || !payload.sub) 
+        return client.disconnect();
 
-      console.log(`User ${payload.sub} connected`);
+      const roomName = `user_${payload.sub}`;
+      client.join(roomName);
+
+      console.log(`User ${payload.sub} joined room ${roomName}`);
     } catch {
       client.disconnect();
     }
   }
 
-  handleDisconnect(client: Socket) {
-    for (const [userId, socketId] of this.onlineUsers.entries()) {
-      if (socketId === client.id) {
-        this.onlineUsers.delete(userId);
-        console.log(`User ${userId} disconnected`);
-        break;
-      }
-    }
+  sendNotification(userId: number, payload: any) {
+    this.server.to(`user_${userId}`).emit('notification', payload);
   }
 
-  sendNotification(userId: number, payload: any) {
-    const socketId = this.onlineUsers.get(userId);
-    if (!socketId) return;
+  broadcastMarkAsRead(userId: number, ids: number[]) {
+    this.server.to(`user_${userId}`).emit('marked_as_read', {ids});
+  }
 
-    this.server.to(socketId).emit('notification', payload);
+  broadcastMarkAsAllRead(userId: number) {
+    this.server.to(`user_${userId}`).emit('all_read');
   }
 }
